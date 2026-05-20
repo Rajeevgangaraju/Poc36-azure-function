@@ -1,0 +1,35 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Replace with your actual Azure Function App name from Step 3
+  functionAppName: 'your-azure-function-app-name' 
+  azureSubscription: 'your-service-connection-name'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+  displayName: 'Use Python environment'
+
+- script: |
+    npm install -g azure-functions-core-tools@4 --unsafe-perm=true
+  displayName: 'Install Azure Functions Core Tools'
+
+- script: |
+    python -m venv .venv
+    source .venv/bin/activate
+    # Add pip install commands here if you have a requirements.txt file
+  displayName: 'Build and Prepare Environment'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: '$(azureSubscription)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      func azure functionapp publish $(functionAppName) --python
+  displayName: 'Publish Function App using Core Tools CLI'
