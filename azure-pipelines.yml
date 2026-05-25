@@ -4,32 +4,30 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  # Replace with your actual Azure Function App name from Step 3
-  functionAppName: 'your-azure-function-app-name' 
-  azureSubscription: 'your-service-connection-name'
-
 steps:
-- task: UsePythonVersion@0
+- task: NodeTool@0
   inputs:
-    versionSpec: '3.x'
-  displayName: 'Use Python environment'
+    versionSpec: '18.x'
+  displayName: 'Install Node.js'
 
 - script: |
-    npm install -g azure-functions-core-tools@4 --unsafe-perm=true
+    npm install
+    npm run build
+  displayName: 'Install dependencies and build'
+
+- script: |
+    curl https://microsoft.com | gpg --dearmor > microsoft.gpg
+    sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+    sudo sh -c 'echo "deb [arch=amd64] https://microsoft.com jammy main" > /etc/apt/sources.list.d/dotnetdev.list'
+    sudo apt-get update
+    sudo apt-get install azure-functions-core-tools-4
   displayName: 'Install Azure Functions Core Tools'
 
-- script: |
-    python -m venv .venv
-    source .venv/bin/activate
-    # Add pip install commands here if you have a requirements.txt file
-  displayName: 'Build and Prepare Environment'
-
 - task: AzureCLI@2
+  displayName: 'Publish Azure Function'
   inputs:
-    azureSubscription: '$(azureSubscription)'
+    azureSubscription: 'YOUR_SERVICE_CONNECTION_NAME'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      func azure functionapp publish $(functionAppName) --python
-  displayName: 'Publish Function App using Core Tools CLI'
+      func azure functionapp publish YOUR_FUNCTION_APP_NAME --typescript
