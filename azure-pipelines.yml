@@ -30,6 +30,6 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      STORAGE_CONN=$(az storage account show-connection-string --name poc36storage --resource-group YOUR_RESOURCE_GROUP --query connectionString -o tsv)
-      az functionapp config appsettings set --name poc36-function --resource-group YOUR_RESOURCE_GROUP --settings AzureWebJobsStorage="$STORAGE_CONN" WEBSITE_CONTENTAZUREFILECONNECTIONSTRING="$STORAGE_CONN" WEBSITE_CONTENTSHARE="poc36-function-share" FUNCTIONS_WORKER_RUNTIME="node"
+      STORAGE_CONN=$(az storage account show-connection-string --name poc36storagecenter --resource-group rg-poc36 --query connectionString -o tsv)
+      az functionapp config appsettings set --name poc36-function --resource-group rg-poc36 --settings AzureWebJobsStorage="$STORAGE_CONN" WEBSITE_CONTENTAZUREFILECONNECTIONSTRING="$STORAGE_CONN" WEBSITE_CONTENTSHARE="poc36-function-share" FUNCTIONS_WORKER_RUNTIME="node"
       func azure functionapp publish poc36-function --typescript
