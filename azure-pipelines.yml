@@ -1,33 +1,20 @@
-trigger:
-- main
-
-pool:
-  vmImage: 'ubuntu-latest'
-
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '18.x'
-  displayName: 'Install Node.js'
-
-- script: |
-    npm install
-    npm run build
-  displayName: 'Install dependencies and build'
-
-- script: |
-    curl https://microsoft.com | gpg --dearmor > microsoft.gpg
-    sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
-    sudo sh -c 'echo "deb [arch=amd64] https://microsoft.com jammy main" > /etc/apt/sources.list.d/dotnetdev.list'
-    sudo apt-get update
-    sudo apt-get install azure-functions-core-tools-4
-  displayName: 'Install Azure Functions Core Tools'
-
 - task: AzureCLI@2
   displayName: 'Publish Azure Function'
   inputs:
-    azureSubscription: 'YOUR_SERVICE_CONNECTION_NAME'
+    azureSubscription: 'YOUR_SERVICE_CONNECTION_NAME' # <--- Ensure this matches your Service Connection name
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      func azure functionapp publish YOUR_FUNCTION_APP_NAME --typescript
+      # 1. Dynamically grab the connection string of the storage account you just created
+      # Change 'poc36storage' and 'YOUR_RESOURCE_GROUP' to your exact names
+      STORAGE_CONN=$(az storage account show-connection-string --name poc36storage --resource-group YOUR_RESOURCE_GROUP --query connectionString -o tsv)
+      
+      # 2. Force apply the connection strings and create the content file share configs
+      az functionapp config appsettings set --name poc36-function --resource-group YOUR_RESOURCE_GROUP --settings \
+        AzureWebJobsStorage="$STORAGE_CONN" \
+        WEBSITE_CONTENTAZUREFILECONNECTIONSTRING="$STORAGE_CONN" \
+        WEBSITE_CONTENTSHARE="poc36-function-share" \
+        FUNCTIONS_WORKER_RUNTIME="node"
+        
+      # 3. Execute the publish operation now that settings are validated
+      func azure functionapp publish poc36-function --typescript
